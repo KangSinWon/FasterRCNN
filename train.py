@@ -347,17 +347,27 @@ def train():
     roi_loss = roi_cls_loss + (roi_lambda * roi_loc_loss)
     total_loss = rpn_loss + roi_loss
 
+def collate_fn(batch):
+    return tuple(zip(*batch))
 
 if __name__ == "__main__":
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     kitti = KittiDataset('/home/kangsinwon/3D_Object_Detection/KITTI_DATA/training', True, True, True, True)
-    kitti[10]
+
+    # print(kitti[181]['want to do'])
+    # cv2.imshow('img', kitti[181]['image_bev'].permute(1, 2, 0).numpy())
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    torch.manual_seed(1)
     train_data_loader = DataLoader (
         kitti,
         batch_size=4,
         shuffle=True,
         num_workers=2,
+        collate_fn=collate_fn
     )
-    # train()
 
-    # epoch = 100
-    # for i in range(epoch):
+    n_epochs = 100
+    for epoch in range(n_epochs):
+        # TODO: generate anchor box
