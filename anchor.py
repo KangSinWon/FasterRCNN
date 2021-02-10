@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 class Anchor:
     def __init__(self, width, height, stride):
@@ -16,7 +17,46 @@ class Anchor:
         self.anchor_boxes = self.anchor_generator()
         self.inside_index = self.remove_outside_boxes()
         self.inside_anchor_boxes = self.anchor_boxes[self.inside_index]
-        
+
+    # def getWHCxCy(self, anchor):
+    #     w = anchor[2] - anchor[0] + 1
+    #     h = anchor[3] - anchor[1] + 1
+    #     cx = anchor[0] + 0.5 * (w - 1)
+    #     cy = anchor[1] + 0.5 * (h - 1)
+
+    #     return w, h, cx, cy
+
+    # def makeAnchors(self, ws, hs, cx, cy):
+    #     ws = ws[:, np.newaxis]
+    #     hs = hs[:, np.newaxis]
+    #     anchors = np.hstack((cx - 0.5 * (ws - 1),
+    #                             cy - 0.5 * (hs - 1),
+    #                             cx + 0.5 * (ws - 1),
+    #                             cy + 0.5 * (hs - 1)))
+    #     return anchors
+
+
+    # def generate_anchors(self):
+    #     scales = np.array(self.scales)
+    #     ratios = np.array(self.ratios)
+    #     anchor_base = np.array([1, 1, self.stride, self.stride]) - 1
+    #     w, h, cx, cy = self.getWHCxCy(anchor_base)
+    #     size = w * h
+    #     size_ratios = size / self.ratios
+    #     ws = np.round(np.sqrt(size_ratios))
+    #     hs = np.round(ws * self.ratios)
+    #     anchors = self.makeAnchors(ws, hs, cx, cy)
+    #     tmp = list()
+    #     for i in range(anchors.shape[0]):
+    #         w, h, cx, cy = self.getWHCxCy(anchors[i, :])
+    #         ws = w * scales
+    #         hs = h * scales
+    #         tmp.append(self.makeAnchors(ws, hs, cx, cy))
+    #     anchors = np.vstack(tmp)
+
+    #     return torch.from_numpy(anchors).float()
+
+
     def anchor_generator(self):
         center_x = np.arange(self.stride, (self.features_map_width + 1) * self.stride, self.stride)
         center_y = np.arange(self.stride, (self.features_map_height + 1) * self.stride, self.stride)

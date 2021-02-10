@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class RPN(nn.Module):
+class RegionProposalNet(nn.Module):
     def __init__(self, in_channels, out_channels, n_anchor):
-        super(RPN, self).__init__()
+        super(RegionProposalNet, self).__init__()
 
         self.in_channels = in_channels
         self.out_channels = out_channels

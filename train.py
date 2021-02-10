@@ -4,9 +4,10 @@ import torch.nn as nn
 import cv2
 import numpy as np
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 from anchor import Anchor
-from rpn import RPN
+from rpn import RegionProposalNet
 from kitti_dataset import KittiDataset
 
 def train():
@@ -350,24 +351,57 @@ def train():
 def collate_fn(batch):
     return tuple(zip(*batch))
 
+# Hyperparameter
+n_epochs = 100
+batch_size = 4
+stride = 16
+
 if __name__ == "__main__":
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     kitti = KittiDataset('/home/kangsinwon/3D_Object_Detection/KITTI_DATA/training', True, True, True, True)
 
-    # print(kitti[181]['want to do'])
-    # cv2.imshow('img', kitti[181]['image_bev'].permute(1, 2, 0).numpy())
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
+    # How to Resize the input image
     torch.manual_seed(1)
     train_data_loader = DataLoader (
         kitti,
-        batch_size=4,
+        batch_size=batch_size,
         shuffle=True,
         num_workers=2,
         collate_fn=collate_fn
     )
 
-    n_epochs = 100
+    data, target_size, scale_factor = kitti[0]
+
+    # img = data['image'].permute(1, 2, 0).numpy()
+    # img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+    # cv2.rectangle(img, (data['boxes_2d'][0][0], data['boxes_2d'][0][1]), (data['boxes_2d'][0][2], data['boxes_2d'][0][3]), (0, 255, 0), 3)
+    # cv2.imshow('img', img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # ws, hs, cx, cy
+    # anchor = Anchor(target_size[1], target_size[0], stride)
+    # print(anchor.generate_anchors())
+
+    iters_per_epoch =int(len(kitti) / batch_size)
     for epoch in range(n_epochs):
-        # TODO: generate anchor box
+        data_iter = iter(train_data_loader)
+
+        for step in range(iters_per_epoch):
+            data, scale_factor, target_size = next(data_iter)
+
+            image = data['image']
+            boxes_2d = data['boxes_2d']
+            labels = data['labels']
+
+            ############## Forward ##############
+            # TODO
+            # rois, cls_prob, bbox_pred, rpn_loss, rpn_loss, etc ...  = fasterRCNN(image, boxes_2d, labels)
+
+            # TODO
+            # Loss = rpn_cls + rpn_box + RCNN_cls + RCNN_bbox
+
+            ############## Backward ##############
+            # optimizer.zero_grad()
+            # loss.backward()
+            # optimizer.step()
