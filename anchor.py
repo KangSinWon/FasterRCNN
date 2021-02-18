@@ -86,40 +86,40 @@ class Anchor:
         
         return anchor_boxes
     
-    def remove_outside_boxes(self, anchor_boxes):
+    def remove_outside_boxes(self):
         index = np.where(
-                    (anchor_boxes[:, 0] >= 0) &
-                    (anchor_boxes[:, 1] >= 0) &
-                    (anchor_boxes[:, 2] <= self.width) &
-                    (anchor_boxes[:, 3] <= self.height))[0]
+                    (self.anchor_boxes[:, 0] >= 0) &
+                    (self.anchor_boxes[:, 1] >= 0) &
+                    (self.anchor_boxes[:, 2] <= self.width) &
+                    (self.anchor_boxes[:, 3] <= self.height))[0]
 
         return index
 
-    def get_ious(self):
-        # np.empty에 4는 해당 사진의 gt objects 개수
-        # TODO: change 4 to gt_object num
-        ious = np.empty((len(self.inside_anchor_boxes), 4), dtype=np.float32)
-        ious.fill(0)
+    # def get_ious(self):
+    #     # np.empty에 4는 해당 사진의 gt objects 개수
+    #     # TODO: change 4 to gt_object num
+    #     ious = np.empty((len(self.inside_anchor_boxes), 4), dtype=np.float32)
+    #     ious.fill(0)
 
-        for i, anchor_box in enumerate(self.inside_anchor_boxes):
-            xa1, ya1, xa2, ya2 = anchor_box
-            anchor_area = (xa2 - xa1) * (ya2 - ya1)
+    #     for i, anchor_box in enumerate(self.inside_anchor_boxes):
+    #         xa1, ya1, xa2, ya2 = anchor_box
+    #         anchor_area = (xa2 - xa1) * (ya2 - ya1)
 
-            for j, gt_box in enumerate(self.gt_boxes):
-                xb1, yb1, xb2, yb2 = gt_box
-                gt_area = (xb2 - xb1) * (yb2 - yb1)
+    #         for j, gt_box in enumerate(self.gt_boxes):
+    #             xb1, yb1, xb2, yb2 = gt_box
+    #             gt_area = (xb2 - xb1) * (yb2 - yb1)
 
-                x1 = max([xb1, xa1])
-                y1 = max([yb1, ya1])
-                x2 = min([xb2, xa2])
-                y2 = min([yb2, ya2])
+    #             x1 = max([xb1, xa1])
+    #             y1 = max([yb1, ya1])
+    #             x2 = min([xb2, xa2])
+    #             y2 = min([yb2, ya2])
                 
-                if (x1 < x2) and (y1 < y2):
-                    area = (x2 - x1) * (y2 - y1)
-                    iou = area / (anchor_area + gt_area - area)
-                else:
-                    iou = 0
+    #             if (x1 < x2) and (y1 < y2):
+    #                 area = (x2 - x1) * (y2 - y1)
+    #                 iou = area / (anchor_area + gt_area - area)
+    #             else:
+    #                 iou = 0
                 
-                ious[i, j] = iou
+    #             ious[i, j] = iou
         
-        return ious
+    #     return ious

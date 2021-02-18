@@ -44,7 +44,9 @@ class KittiDataset(Dataset):
         label_path = os.path.join(self.labels_path, self.labels[idx])
 
         image = Image.open(image_path).convert("RGB")
-        image, scale_factor, target_size = self.image_transform(image)
+        ori_w, ori_h = image.size
+        image, scale, target_size = self.image_transform(image)
+        # image = self.image_transform(image)
 
         calib = utils.read_calib(calib_path)
         velo = utils.read_velo(velo_path)
@@ -52,44 +54,51 @@ class KittiDataset(Dataset):
         label = self.remove_dontcare(label)
 
         boxes = [[x.xmin, x.ymin, x.xmax, x.ymax] for x in label]
-        boxes = np.asarray(boxes) * scale_factor
+        # boxes = np.asarray(boxes) * scale_factor
+        boxes = np.asarray(boxes)
+
+        boxes[:, 0] = boxes[:, 0] * scale[1]
+        boxes[:, 1] = boxes[:, 1] * scale[0]
+        boxes[:, 2] = boxes[:, 2] * scale[1]
+        boxes[:, 3] = boxes[:, 3] * scale[0]
 
         labels = [self.label_encoder[x.type] for x in label]
         # print('Data Load Finished .....')
 
-        image_fv = self.front_view_velodyne(velo[:, :3], calib, target_size[1], target_size[0])
-        image_bev = self.bird_eye_view_velodyne(velo)
+        # image_fv = self.front_view_velodyne(velo[:, :3], calib, target_size[1], target_size[0])
+        # image_bev = self.bird_eye_view_velodyne(velo)
         # print('Image preprocessing Finished .....')
 
-        boxes_2d_bev = self.boxes2d_in_bev(label, calib)
-        boxes_3d = self.boxes3d_projection_in_image(calib, label)
+        # boxes_2d_bev = self.boxes2d_in_bev(label, calib)
+        # boxes_3d = self.boxes3d_projection_in_image(calib, label)
         # print('Boxes preprocessing Finished ......')
 
         # ToTensor
         # image = torchvision.transforms.ToTensor()(image)
-        image_fv = torchvision.transforms.ToTensor()(image_fv)
-        image_bev = torchvision.transforms.ToTensor()(image_bev)
+        # image_fv = torchvision.transforms.ToTensor()(image_fv)
+        # image_bev = torchvision.transforms.ToTensor()(image_bev)
 
         boxes_2d = torch.as_tensor(boxes, dtype=torch.float32)
-        boxes_2d_bev = torch.as_tensor(boxes_2d_bev, dtype=torch.float32)
-        boxes_3d = torch.as_tensor(boxes_3d, dtype=torch.float32)
+        # boxes_2d_bev = torch.as_tensor(boxes_2d_bev, dtype=torch.float32)
+        # boxes_3d = torch.as_tensor(boxes_3d, dtype=torch.float32)
          
         labels = torch.as_tensor(labels, dtype=torch.int64)
         # print('Data To Tensor finished ......')
         # velo = torch.as_tensor(velo, dtype=torch.float32)
 
-        target = {}
-        target['image'] = image
+        # target = {}
+        # target['image'] = image
         # target['image_fv'] = image_fv
         # target['image_bev'] = image_bev
 
-        target['boxes_2d'] = boxes_2d
+        # target['boxes_2d'] = boxes_2d
         # target['boxes_2d_bev'] = boxes_2d_bev
         # target['boxes_3d'] = boxes_3d
 
-        target['labels'] = labels
+        # target['labels'] = labels
         
-        return target, target_size, scale_factor
+        return image, boxes_2d, labels
+        # return image, target, target_size, scale_factor
     
     def remove_dontcare(self, labels):
         x = []
@@ -100,14 +109,20 @@ class KittiDataset(Dataset):
         return x
 
     def image_transform(self, image):
-        w_ori, h_ori = image.width, image.height
-        if w_ori > h_ori:   
-            target_size = (self.image_size_dict.get('SHORT_SIDE'), self.image_size_dict.get('LONG_SIDE'))
-        else:
-            target_size = (self.image_size_dict.get('LONG_SIDE'), self.image_size_dict.get('SHORT_SIDE'))
-        h_t, w_t = target_size
-        scale_factor = min(w_t/w_ori, h_t/h_ori)
-        target_size = (round(scale_factor*h_ori), round(scale_factor*w_ori))
+        ori_w, ori_h = image.size
+        # w_ori, h_ori = image.width, image.height
+        # if w_ori > h_ori:   
+            # target_size = (self.image_size_dict.get('SHORT_SIDE'), self.image_size_dict.get('LONG_SIDE'))
+        # else:
+            # target_size = (self.image_size_dict.get('LONG_SIDE'), self.image_size_dict.get('SHORT_SIDE'))
+        # h_t, w_t = target_size
+        # scale_factor = min(w_t/w_ori, h_t/h_ori)
+        # target_size = (round(scale_factor*h_ori), round(scale_factor*w_ori))
+
+        # fixed value
+        # scale_factor = 1.0732689210950082
+        target_size = (402, 1333)
+        scale = [target_size[0] / ori_h, target_size[1] / ori_w]
 
         means_norm = (0.485, 0.456, 0.406)
         stds_norm = (0.229, 0.224, 0.225)
@@ -118,8 +133,11 @@ class KittiDataset(Dataset):
         transform = transforms.Compose([transforms.Resize(target_size),
                                 transforms.ToTensor()])
 
+        # transform = transforms.Compose([transforms.ToTensor()])                                
+
         image = transform(image)
-        return image, scale_factor, target_size
+        # return image
+        return image, scale, target_size
 
     ################## 2DBox on Bird Eye View ##################
     def inverse_rigid_transform(self, velo_to_cam):
