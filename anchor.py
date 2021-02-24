@@ -7,7 +7,7 @@ class Anchor:
         self.gt_boxes = []
 
         self.ratios = [0.5, 1, 2]
-        self.scales = [8, 16, 32]
+        self.scales = [4, 8, 16]
         
         self.stride = stride
         self.width = width
@@ -63,10 +63,11 @@ class Anchor:
         
         index = 0
         anchor_center = np.zeros((self.features_map_width * self.features_map_height, 2))
+
         for i in range(len(center_x)):
             for j in range(len(center_y)):
-                anchor_center[index, 1] = center_x[i] - 8
-                anchor_center[index, 0] = center_y[j] - 8
+                anchor_center[index, 0] = center_x[i] - 8
+                anchor_center[index, 1] = center_y[j] - 8
                 index += 1
         
         index = 0
