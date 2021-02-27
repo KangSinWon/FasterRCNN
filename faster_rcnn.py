@@ -37,7 +37,7 @@ class FasterRCNN(nn.Module):
 
 
     def forward(self, image, gt_boxes, labels):
-        print('foward faster rcnn:', image.shape)
+        # print('foward faster rcnn:', image.shape)
         batch_size = len(image)
 
         base_feature = self.RCNN_base(image)
@@ -45,9 +45,9 @@ class FasterRCNN(nn.Module):
 
         anchor, rpn_cls_score, rpn_bbox_pred, rpn_cls_loss, rpn_bbox_loss, rpn_loss = self.rpn(base_feature, gt_boxes)
 
-        proposal_layer_roi = self.proposal_layer(anchor, rpn_cls_score, rpn_bbox_pred, rpn_cls_loss, rpn_bbox_loss)
+        proposal_layer_roi = self.proposal_layer(anchor, rpn_cls_score, rpn_bbox_pred, rpn_cls_loss, rpn_bbox_loss, image)
         proposal_layer_roi = torch.as_tensor(proposal_layer_roi)
-        print('proposal_layer shape', proposal_layer_roi.shape)
+        # print('proposal_layer shape', proposal_layer_roi.shape)
 
         # TODO: Proposal Target layer | Remove image parameter
         # [4, 128, 4]
@@ -96,28 +96,32 @@ class FasterRCNN(nn.Module):
         # Regression loss
         n_sample = roi_cls_bbox.shape[1]
         roi_bbox = roi_cls_bbox.view(batch_size, n_sample, -1, 4)
-        # print(roi_bbox.shape)
 
         batch_roi_bbox_loss = []
         for i in range(batch_size):
             u = roi_bbox[i][torch.arange(0, n_sample).long(), gt_roi_label[i]]
-            
+
             pos = gt_roi_label[i] > 0
             mask = pos.unsqueeze(1).expand_as(u)
 
             mask_bbox_preds = u[mask].view(-1, 4)
             mask_bbox_targets = gt_roi_bbox[i][mask].view(-1, 4)
+            print(mask_bbox_preds.shape, mask_bbox_targets.shape)
+
+            print(mask_bbox_targets)
+            print(mask_bbox_preds)
 
             x = torch.abs(mask_bbox_targets - mask_bbox_preds)
             roi_bbox_loss = ((x < 1).float() * 0.5 * x ** 2) + ((x >= 1).float() * (x - 0.5))
             batch_roi_bbox_loss.append(roi_bbox_loss)
 
-            # print('roi_bbox_loss:', roi_bbox_loss.sum())
+            print(i, 'roi_bbox_loss:', roi_bbox_loss.sum())
         
         roi_bbox_loss = sum([l.sum() for l in batch_roi_bbox_loss])
         # print('roi_bbox_loss:', roi_bbox_loss)
 
         roi_lambda = 10.
+
         roi_loss = roi_cls_loss + (roi_lambda * roi_bbox_loss)
         loss = rpn_loss + roi_loss
         # print('loss', loss)

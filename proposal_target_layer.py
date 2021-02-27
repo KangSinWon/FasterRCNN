@@ -79,14 +79,14 @@ class ProposalTargetLayer(nn.Module):
 
             for j in range(pos_roi_per_image):
                 x1, y1, x2, y2 = roi[i][pos_index[j]]
-                cv2.rectangle(img, (x1, y1), (x2, y2), color=(255, 2552, 255), thickness=3)
+                cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
 
             for j in range(gt_boxes[i].shape[0]):
                 x1, y1, x2, y2 = gt_boxes[i][j]
-                cv2.rectangle(img, (x1, y1), (x2, y2), color=(0, 2552, 0), thickness=3)
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
             cv2.imshow('img', img)
-            cv2.waitKey(0)
+            cv2.waitKey(500)
             cv2.destroyAllWindows()
 
             keep_index = np.append(pos_index, neg_index)
