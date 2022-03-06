@@ -5,3 +5,6 @@
 논문이랑 코드 분석해서 나름 짜본 코드  
 
 결과: 학습이 제대로 되지는 않았다. 하지만 내부에 돌아가는 모듈들을 이해할 수 있었음
+
+## Reference Paper
+- Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks
